@@ -1,0 +1,6 @@
+name="scow_transport_stream"
+version="1.0.0"
+description="TCP Based Transport for Scow"
+requires="core,async,gen_server"
+archive(byte)="scow_transport_stream.cma"
+archive(native)="scow_transport_stream.cmxa"
