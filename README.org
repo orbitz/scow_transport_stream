@@ -1,2 +1,4 @@
 * About
-Template for my usual ocaml projects
+Implements a TCP stream transport for Scow.  Allows user to specify the encoding
+for the data.
+
