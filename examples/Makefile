@@ -1,10 +1,11 @@
 CAMLP4=
-OCAMLC_OPTS=-w '@f@p@u@s@40'
+OCAMLC_OPTS=-w '@f@p@u@s@40' -package scow,core,async,scow_transport_stream
 OCAMLOPT_OPTS=$(OCAMLC_OPTS)
 
-NON_LIB_MODULES=
+NON_LIB_MODULES=append_entries.ml append_entries_party.ml
 
-EXTERNAL_DEPS=
+EXTERNAL_DEPS=../lib/scow_transport_stream/scow_transport_stream.cma \
+	../lib/scow_transport_stream/scow_transport_stream.cmxa
 
 native_bin=$(NON_LIB_MODULES:%.ml=%.native)
 
