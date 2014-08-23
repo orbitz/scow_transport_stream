@@ -28,29 +28,37 @@ module Simple_codec = struct
   module Msg = Scow_transport_stream_codec.Msg
 
   let to_string = function
-    | Msg.Resp_append_entries (request_id_str, term, success) ->
+    | Msg.Resp_append_entries response ->
+      let module R = Scow_transport_stream_codec.Response in
+      let (term, success) = response.R.payload in
       sprintf "resp_append_entries!%s!%d!%s"
-        request_id_str
+        response.R.request_id
         (Scow_term.to_int term)
         (Bool.to_string success)
-    | Msg.Resp_request_vote (request_id_str, term, granted) ->
+    | Msg.Resp_request_vote response ->
+      let module R = Scow_transport_stream_codec.Response in
+      let (term, granted) = response.R.payload in
       sprintf "resp_request_vote!%s!%d!%s"
-        request_id_str
+        response.R.request_id
         (Scow_term.to_int term)
         (Bool.to_string granted)
-    | Msg.Request_vote (node_str, request_id_str, request_vote) ->
+    | Msg.Request_vote request ->
+      let module R = Scow_transport_stream_codec.Request in
       let module Rv = Scow_rpc.Request_vote in
+      let request_vote = request.R.payload in
       sprintf "request_vote!%s!%s!%d!%d!%d"
-        node_str
-        request_id_str
+        request.R.node
+        request.R.request_id
         (Scow_term.to_int request_vote.Rv.term)
         (Scow_log_index.to_int request_vote.Rv.last_log_index)
         (Scow_term.to_int request_vote.Rv.last_log_term)
-    | Msg.Append_entries (node_str, request_id_str, append_entries) ->
+    | Msg.Append_entries request ->
+      let module R = Scow_transport_stream_codec.Request in
       let module Ae = Scow_rpc.Append_entries in
+      let append_entries = request.R.payload in
       sprintf "append_entries!%s!%s!%d!%d!%d!%d!%s"
-        node_str
-        request_id_str
+        request.R.node
+        request.R.request_id
         (Scow_term.to_int append_entries.Ae.term)
         (Scow_log_index.to_int append_entries.Ae.prev_log_index)
         (Scow_term.to_int append_entries.Ae.prev_log_term)
@@ -65,28 +73,31 @@ module Simple_codec = struct
     let msg =
       match String.split ~on:'!' str with
         | [ "resp_append_entries"
-          ; request_id_str
+          ; request_id
           ; term_str
           ; success_str
           ] ->
+          let module R = Scow_transport_stream_codec.Response in
           let term = Option.value_exn (Scow_term.of_int (Int.of_string term_str)) in
           let success = Bool.of_string success_str in
-          Msg.Resp_append_entries (request_id_str, term, success)
+          Msg.Resp_append_entries { R.request_id; payload = (term, success) }
         | [ "resp_request_vote"
-          ; request_id_str
+          ; request_id
           ; term_str
           ; granted_str
           ] ->
+          let module R = Scow_transport_stream_codec.Response in
           let term = Option.value_exn (Scow_term.of_int (Int.of_string term_str)) in
           let granted = Bool.of_string granted_str in
-          Msg.Resp_request_vote (request_id_str, term, granted)
+          Msg.Resp_request_vote { R.request_id; payload = (term, granted) }
         | [ "request_vote"
-          ; node_str
-          ; request_id_str
+          ; node
+          ; request_id
           ; term_str
           ; last_log_index_str
           ; last_log_term_str
           ] ->
+          let module R = Scow_transport_stream_codec.Request in
           let term = Option.value_exn (Scow_term.of_int (Int.of_string term_str)) in
           let last_log_index =
             Option.value_exn (Scow_log_index.of_int (Int.of_string last_log_index_str))
@@ -100,16 +111,17 @@ module Simple_codec = struct
                              ;    last_log_term
                              }
           in
-          Msg.Request_vote (node_str, request_id_str, request_vote)
+          Msg.Request_vote { R.node; request_id; payload = request_vote }
         | [ "append_entries"
-          ; node_str
-          ; request_id_str
+          ; node
+          ; request_id
           ; term_str
           ; prev_log_index_str
           ; prev_log_term_str
           ; leader_commit_str
           ; entries_str
           ] -> begin
+          let module R = Scow_transport_stream_codec.Request in
           let term = Option.value_exn (Scow_term.of_int (Int.of_string term_str)) in
           let prev_log_index =
             Option.value_exn (Scow_log_index.of_int (Int.of_string prev_log_index_str))
@@ -138,7 +150,7 @@ module Simple_codec = struct
                                ;    entries
                                }
           in
-          Msg.Append_entries (node_str, request_id_str, append_entries)
+          Msg.Append_entries { R.node; request_id; payload = append_entries }
         end
         | _ -> failwith str
     in

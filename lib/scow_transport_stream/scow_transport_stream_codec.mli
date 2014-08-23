@@ -1,9 +1,22 @@
+module Request : sig
+  type 'a t = { node       : string
+              ; request_id : string
+              ; payload    : 'a
+              }
+end
+
+module Response : sig
+  type 'a t = { request_id : string
+              ; payload    : 'a
+              }
+end
+
 module Msg : sig
   type 'elt t =
-    | Resp_append_entries of (string * Scow_term.t * bool)
-    | Resp_request_vote   of (string * Scow_term.t * bool)
-    | Request_vote        of (string * string * Scow_rpc.Request_vote.t)
-    | Append_entries      of (string * string * 'elt Scow_rpc.Append_entries.t)
+    | Resp_append_entries of (Scow_term.t * bool) Response.t
+    | Resp_request_vote   of (Scow_term.t * bool) Response.t
+    | Request_vote        of Scow_rpc.Request_vote.t Request.t
+    | Append_entries      of 'elt Scow_rpc.Append_entries.t Request.t
 end
 
 module type S = sig
